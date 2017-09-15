@@ -9,6 +9,9 @@
     - name: 1. install docker
       yum: name=docker state=installed
 
+    - name: Add Users to dockerroot
+      action: user name=admin groups="root,dockerroot" append=yes
+
     - name: 1. install kubectl
       yum: name=kubectl state=installed
 
