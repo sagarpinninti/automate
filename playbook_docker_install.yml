@@ -6,11 +6,12 @@
 - hosts: nodes
   tasks:
     - name: Installs docker
-      sudo: yes
+      become: yes
       yum: pkg=docker state=installed
       notify:
         - start docker
   handlers:
     - name: start docker
-      service: name=docker state=started
+      become: yes
+      service: name=docker state=restart
 
