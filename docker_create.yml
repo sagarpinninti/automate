@@ -1,0 +1,11 @@
+---
+- hosts: nodes
+  tasks:
+    - name: Installs docker
+      sudo: yes
+      yum: pkg=docker state=installed
+      notify:
+        - start docker
+  handlers:
+    - name: start docker
+      service: name=docker state=started
