@@ -1,7 +1,7 @@
-
-
 ############## DOCKER INSTALL PLAYBOOK ################
-######### COMMAND # ansible-playbook-2.7 -i -s docker_create.yml ############
+########## COMMAND # ansible-playbook-2.7 -i -s docker_create.yml ############
+
+
 ---
 - hosts: nodes
   tasks:
@@ -13,5 +13,4 @@
   handlers:
     - name: start docker
       become: yes
-      service: name=docker state=restart
-
+      service: name=docker state=started
