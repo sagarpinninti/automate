@@ -1,0 +1,112 @@
+---
+- hosts: nodes
+  remote_user: admin
+  become: yes
+  become_method: sudo
+  tasks:
+    - copy: src=/etc/yum.repos.d/kubernetes.repo dest=/etc/yum.repos.d/kubernetes.repo
+
+    - name: stop firewall service
+      service: name=firewalld state=stopped
+
+    - name: Creates directory
+      file: path=/var/lib/docker state=directory owner=admin group=admin mode=0755
+
+    - name: Install docker
+      yum: name=docker state=installed
+
+    - name: Add Users to dockerroot
+      action: user name=admin groups="root,dockerroot" append=yes
+    
+    - name: Create Directory for docker proxy
+      file: path=/etc/systemd/system/docker.service.d state=directory owner=root group=root mode=0755
+    - copy: src=/home/admin/files/http-proxy.conf dest=/etc/systemd/system/docker.service.d/http-proxy.conf
+    
+    - name: Restart daemon
+      command: systemctl daemon-reload
+
+    - name: Restart docker
+      service: name=docker state=restarted
+
+    - name: 1. install kubectl
+      yum: name=kubectl state=installed
+
+    - name: 2. install kubeadm
+      yum: name=kubeadm state=installed
+
+    - name: 3. install kubelet
+      yum: name=kubelet state=installed
+
+- hosts: master
+  remote_user: admin
+  become: yes
+  become_method: sudo
+  tasks:
+    - command: kubeadm init --pod-network-cidr 10.244.0.0/16
+    - name: create directory and copy adminconfig file
+      file: path=/home/admin/.kube state=directory owner=admin group=admin mode=0755
+    - command: cp /etc/kubernetes/admin.conf /home/admin/.kube/config
+    - name: provide permissions for configfile
+      file: path=/home/admin/.kube/config owner=admin group=admin mode=0755
+
+- hosts: master
+  remote_user: admin
+  become: yes
+  become_method: sudo
+  tasks:
+  - copy: src=/home/admin/playbooks/token-req.sh dest=/home/admin/token-req.sh owner=admin group=admin mode=0777
+  - shell: /home/admin/token-req.sh >> token.txt
+
+- hosts: master
+  remote_user: admin
+  become: yes
+  become_method: sudo
+  tasks:
+  - fetch: src=join.sh dest=/home/admin/playbooks/join.sh flat=yes 
+
+- hosts: workers
+  user: admin
+  become: yes
+  become_method: sudo
+  tasks:
+  - copy: src=/home/admin/playbooks/join.sh dest=/home/admin/join.sh owner=admin group=admin mode=0777
+  - shell: /home/admin/join.sh
+  - file: path=/home/admin/.kube state=directory owner=admin group=admin mode=0755
+  - copy: src=/home/admin/.kube/config dest=/home/admin/.kube/config owner=admin group=admin mode=0755
+
+- hosts: master
+  remote_user: admin
+  become: yes
+  become_method: sudo
+  tasks:
+  - copy: src=/home/admin/playbooks/flannel/kube-flannel-rbac.yml dest=/home/admin/kube-flannel-rbac.yml owner=admin group=admin mode=0777
+  - copy: src=/home/admin/playbooks/flannel/kube-flannel.yml dest=/home/admin/kube-flannel.yml owner=admin group=admin mode=0777
+  - copy: src=/home/admin/playbooks/flannel/flannel.sh dest=/home/admin/flannel.sh owner=admin group=admin mode=0777
+
+- hosts: master
+  remote_user: admin
+  tasks:
+  - script: /home/admin/flannel.sh
+
+- hosts: nodes
+  remote_user: admin
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: Restart kubelet Service
+    service: name=kubelet state=restarted
+
+- hosts: master
+  remote_user: admin
+  become: yes
+  become_method: sudo
+  tasks:
+  - copy: src=/home/admin/playbooks/dashboard/kubernetes-dashboard.yaml dest=/home/admin/kubernetes-dashboard.yaml owner=admin group=admin mode=0777
+  - copy: src=/home/admin/playbooks/dashboard/dashboard.sh dest=/home/admin/dashboard.sh owner=admin group=admin mode=0777
+
+- hosts: master
+  remote_user: admin
+  tasks:
+  - script: /home/admin/dashboard.sh
+  
+
