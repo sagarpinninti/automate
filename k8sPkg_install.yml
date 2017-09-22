@@ -6,6 +6,9 @@
   tasks:
     - copy: src=/etc/yum.repos.d/kubernetes.repo dest=/etc/yum.repos.d/kubernetes.repo
 
+    - name: stop firewall service 
+      service: name=firewalld state=stopped 
+
     - name: 1. install docker
       yum: name=docker state=installed
 
