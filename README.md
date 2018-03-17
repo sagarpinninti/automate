@@ -19,8 +19,20 @@ Nodes:
   
 Overlay Network: (Flannel/Weave/Calico/OpenVswitch) 
 
-This  virtual network gives a subnet to  each host to use with container runtimes.
-Each Pod has a unique routable IP inside cluster to reduce complexity off port mapping.
+  This  virtual network gives a subnet to  each host to use with container runtimes.
+  Each Pod has a unique routable IP inside cluster to reduce complexity off port mapping.
 
 helm Charts: 
-Used for application management in kubernetes which performs tasks like install,upgrade.
+
+  Used for application management in kubernetes which performs tasks like install,upgrade.
+
+Kubeadm: 
+  Kubernetes cluster installation tool.
+
+Kubectl: 
+  kubectl is a command line interface for running commands against Kubernetes clusters.
+
+Kubernetes can be setup on  clustermode or Minikube(single node).
+
+Kubernetes Dashboard:
+   Graphical interace to monitor and manage cluster.
